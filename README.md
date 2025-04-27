@@ -1,51 +1,25 @@
 # Discord Clone
 
-A Discord clone built with React, TypeScript, Redux, and Firebase.
+This is a Discord clone application built with React, Redux, and Firebase.
 
 ## Features
-
-- Real-time messaging
 - User authentication
+- Real-time messaging
 - Channel creation
-- Server functionalities
-- Modern UI based on Discord
+- Voice channels
+- User profiles
+
+## Updated by ExLinks
+This repository is now maintained by ExLinks as a test repository.
 
 ## Getting Started
-
-### Prerequisites
-
-- Node.js
-- npm or yarn
-
-### Installation
-
 1. Clone the repository
-```bash
-git clone https://github.com/yourusername/your-discord.git
-cd your-discord
-```
-
-2. Install dependencies
-```bash
-npm install
-# or
-yarn install
-```
-
-3. Start the development server
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-4. Open your browser and navigate to `http://localhost:3000`
+2. Install dependencies with `npm install`
+3. Start the development server with `npm start`
 
 ## Technologies Used
-
 - React
-- TypeScript
 - Redux
 - Firebase
-- Material UI
-- SCSS 
+- TypeScript
+- Material UI 
