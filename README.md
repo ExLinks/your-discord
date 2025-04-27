@@ -11,6 +11,7 @@ This is a Discord clone application built with React, Redux, and Firebase.
 
 ## Updated by ExLinks
 This repository is now maintained by ExLinks as a test repository.
+Updated with new PAT token for testing.
 
 ## Getting Started
 1. Clone the repository
