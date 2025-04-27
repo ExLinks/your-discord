@@ -1,3 +1,7 @@
+/**
+ * Chat Component
+ * Main messaging interface for channel communication
+ */
 import React, { useState, useEffect } from "react";
 import ChatHeader from "./ChatHeader";
 import "./Chat.scss";
@@ -18,96 +22,84 @@ import {
   DocumentReference,
   FieldValue,
   Firestore,
-  onSnapshot,
-  orderBy,
-  query,
-  QueryDocumentSnapshot,
-  QuerySnapshot,
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import useFirebase from "../hooks/useFirebase";
 import useSubCollection from "../hooks/useSubCollection";
 
-interface Messages {
+/**
+ * Interface for message data structure
+ */
+interface MessageData {
   timestamp: Timestamp;
   message: string;
   user: {
-    uid: string;
-    photo: string;
-    email: string;
+    userId: string;
+    profileImageUrl: string;
+    emailAddress: string;
     displayName: string;
   };
 }
 
-//51:ディスコードチャット欄にメッセージを表示してみよう
-//52:メッセージを投稿した順番にソートして表示してみよう
-//54:【補足】サブコレクションデータ取得をカスタムフックスで切り出してみよう
+/**
+ * ChatMessaging component
+ * Displays and manages messages in the current channel
+ */
+const ChatMessaging: React.FC = () => {
+  // Get user and channel data from Redux store
+  const currentUser = useAppSelector((state) => state.user.currentUser);
+  const activeChannelId = useAppSelector((state) => state.channel.activeChannelId);
+  const activeChannelName = useAppSelector((state) => state.channel.activeChannelName);
 
-const Chat = () => {
-  const user = useAppSelector((state) => state.user.user);
-  const channelId = useAppSelector((state) => state.app.channelId);
-  const channelName = useAppSelector((state) => state.app.channelName);
+  // State for message input field
+  const [messageText, setMessageText] = useState<string>("");
 
-  const [inputText, setInputText] = useState<string>("");
-  const { subDocuments: messages } = useSubCollection("channels", "messages");
-  // const [messages, setMessages] = useState<Messages[]>([]);
+  // Fetch channel messages using custom hook
+  const { subDocuments: channelMessages } = useSubCollection("channels", "messages");
 
-  // useEffect(() => {
-  //   let collectionRef = collection(
-  //     db,
-  //     "channels",
-  //     String(channelId),
-  //     "messages"
-  //   );
-
-  //   let collectionRefOrderBy = query(
-  //     collectionRef,
-  //     orderBy("timestamp", "desc")
-  //   );
-
-  //   onSnapshot(collectionRefOrderBy, (snapshot) => {
-  //     let results: Messages[] = [];
-  //     snapshot.docs.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-  //       results.push({
-  //         timestamp: doc.data().timestamp,
-  //         message: doc.data().message,
-  //         user: doc.data().user,
-  //       });
-  //     });
-  //     setMessages(results);
-  //   });
-  // }, [channelId]);
-
-  const sendMessage = async (e: React.MouseEvent<HTMLElement>) => {
+  /**
+   * Send a new message to the current channel
+   * Adds message document to Firestore with user data and timestamp
+   */
+  const sendMessage = async (e: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
     e.preventDefault();
 
-    //channlesの中のmessageコレクションの中に新しくデータを入れる。
-    const collectionRef = collection(
-      db,
-      "channels",
-      String(channelId),
-      "messages"
-    );
-    const docRef: DocumentReference<DocumentData> = await addDoc(
-      collectionRef,
-      {
-        timestamp: serverTimestamp(),
-        message: inputText,
-        user: user,
-      }
-    );
-    console.log(docRef);
+    if (!messageText.trim() || !activeChannelId) return;
 
-    setInputText("");
+    try {
+      // Create reference to the messages subcollection for this channel
+      const messagesCollection = collection(
+        db,
+        "channels",
+        String(activeChannelId),
+        "messages"
+      );
+
+      // Add the new message document
+      await addDoc(
+        messagesCollection,
+        {
+          timestamp: serverTimestamp(),
+          message: messageText,
+          user: currentUser,
+        }
+      );
+
+      // Clear the input field after sending
+      setMessageText("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   return (
     <div className="chat">
-      <ChatHeader channelName={channelName} />
+      {/* Channel header with name and options */}
+      <ChatHeader channelName={activeChannelName} />
 
+      {/* Message display area */}
       <div className="chatMessages">
-        {messages.map((message, index) => (
+        {channelMessages.map((message, index) => (
           <Message
             key={index}
             message={message.message}
@@ -117,28 +109,30 @@ const Chat = () => {
         ))}
       </div>
 
+      {/* Message input area */}
       <div className="chatInput">
         <AddCircleOutline fontSize="large" />
         <form>
           <input
             type="text"
-            placeholder={`#${channelName}へメッセージを送信`}
+            placeholder={`Send a message to #${activeChannelName}`}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setInputText(e.target.value)
+              setMessageText(e.target.value)
             }
-            value={inputText}
-            disabled={Boolean(!channelId)}
+            value={messageText}
+            disabled={!activeChannelId}
           />
           <button
             type="submit"
             className="chatInputButton"
-            disabled={Boolean(!channelId)}
-            onClick={(e: React.MouseEvent<HTMLElement>) => sendMessage(e)}
+            disabled={!activeChannelId}
+            onClick={sendMessage}
           >
-            送信
+            Send
           </button>
         </form>
 
+        {/* Message enhancement options */}
         <div className="chatInputIcons">
           <CardGiftcardOutlined />
           <GifIcon />
@@ -149,4 +143,4 @@ const Chat = () => {
   );
 };
 
-export default Chat;
+export default ChatMessaging;

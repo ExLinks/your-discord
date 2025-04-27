@@ -1,25 +1,49 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { InitialAppState } from "../Types";
+/**
+ * Channel Management Redux Slice
+ * Handles the active channel selection and information
+ */
 
-const initialState: InitialAppState = {
-  channelId: null,
-  channelName: null,
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ChannelState } from "../Types";
+
+/**
+ * Initial channel state
+ * No active channel selected by default
+ */
+const initialChannelState: ChannelState = {
+  activeChannelId: null,
+  activeChannelName: null,
 };
 
-export const appSlice = createSlice({
-  name: "app",
-  initialState,
+/**
+ * Channel slice for tracking user selected channels
+ */
+export const channelSlice = createSlice({
+  name: "channel",
+  initialState: initialChannelState,
   reducers: {
-    setChannelId: (state, action) => {
-      state.channelId += action.payload;
+    /**
+     * Update the active channel ID
+     * @param state - Current channel state
+     * @param action - Contains the channel ID to set
+     */
+    setChannelId: (state, action: PayloadAction<string>) => {
+      state.activeChannelId = action.payload;
     },
-    setChannelInfo: (state, action) => {
-      state.channelId = action.payload.channelId;
-      state.channelName = action.payload.channelName;
+    
+    /**
+     * Update both channel ID and name simultaneously
+     * @param state - Current channel state
+     * @param action - Contains channel ID and name to set
+     */
+    setChannelInfo: (state, action: PayloadAction<{channelId: string, channelName: string}>) => {
+      state.activeChannelId = action.payload.channelId;
+      state.activeChannelName = action.payload.channelName;
     },
   },
 });
 
-export const { setChannelId, setChannelInfo } = appSlice.actions;
+// Export actions for component usage
+export const { setChannelId, setChannelInfo } = channelSlice.actions;
 
-export default appSlice.reducer;
+export default channelSlice.reducer;

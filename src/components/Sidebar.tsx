@@ -1,10 +1,14 @@
+/**
+ * Sidebar Navigation Component
+ * Displays server list, channels, and user profile
+ */
 import { ExpandMoreOutlined, Settings } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import MicIcon from "@mui/icons-material/Mic";
 import HeadphonesIcon from "@mui/icons-material/Headphones";
 import React, { useEffect, useState } from "react";
 import "./Sidebar.scss";
-import SidebarChannle from "./SidebarChannle";
+import SidebarChannel from "./SidebarChannle";
 import { useAppSelector } from "../app/hooks";
 import { db, auth } from "../firebase";
 import {
@@ -15,39 +19,52 @@ import {
 } from "firebase/firestore";
 import useFirebase from "../hooks/useFirebase";
 
-const Sidebar = () => {
-  const user = useAppSelector((state) => state.user.user);
-  // const [channels, setChannels] = useState<Channel[]>([]);
+/**
+ * Sidebar component for navigation and channel management
+ * Contains server list, channel list, and user profile section
+ */
+const SidebarNavigation: React.FC = () => {
+  // Get authenticated user from Redux store
+  const authenticatedUser = useAppSelector((state) => state.user.currentUser);
 
-  const { documents: channels } = useFirebase("channels");
-  console.log(channels);
+  // Fetch channels from Firestore using custom hook
+  const { documents: channelList } = useFirebase("channels");
 
-  const addChannel = async () => {
-    let channelName = prompt("新しいチャンネルを作成します");
+  /**
+   * Creates a new channel in Firestore
+   * Prompts user for channel name and adds to database
+   */
+  const createNewChannel = async (): Promise<void> => {
+    const channelName = prompt("Create a new channel");
 
     if (channelName) {
-      const docRef: DocumentReference<DocumentData> = await addDoc(
-        collection(db, "channels"),
-        {
-          channelName: channelName,
-        }
-      );
-      // console.log(docRef);
+      try {
+        // Add new channel document to Firestore
+        const channelRef: DocumentReference<DocumentData> = await addDoc(
+          collection(db, "channels"),
+          {
+            channelName: channelName,
+          }
+        );
+      } catch (error) {
+        console.error("Error creating channel:", error);
+      }
     }
   };
 
   return (
     <div className="sidebar">
+      {/* Server navigation section */}
       <div className="sidebarLeft">
-        {/* discrodIcon */}
         <div className="serverIcon">
-          <img src="./discordLogo.png" alt="" />
+          <img src="./discordLogo.png" alt="Discord Logo" />
         </div>
         <div className="serverIcon">
-          <img src="./logo192.png" alt="" />
+          <img src="./logo192.png" alt="Server Icon" />
         </div>
       </div>
 
+      {/* Main content section */}
       <div className="sidebarRight">
         <div className="sidebarTop">
           <h3>Discord</h3>
@@ -55,37 +72,40 @@ const Sidebar = () => {
         </div>
 
         <div className="sidebarChannels">
+          {/* Channel header with add button */}
           <div className="sidebarChannelsHeader">
             <div className="sidebarHeader">
               <ExpandMoreOutlined />
-              <h4>プログラミングチャンネル</h4>
+              <h4>Programming Channels</h4>
             </div>
-            <AddIcon className="sidebarAddChannel" onClick={addChannel} />
+            <AddIcon
+              className="sidebarAddChannel"
+              onClick={createNewChannel}
+            />
           </div>
 
+          {/* Channel list */}
           <div className="sidebarChannelList">
-            {channels.map((channel) => (
-              <SidebarChannle
+            {channelList.map((channel) => (
+              <SidebarChannel
                 id={channel.id}
                 channel={channel}
                 key={channel.id}
               />
             ))}
-            {/* <SidebarChannle id="1" channel="sample" />
-            <SidebarChannle id="1" channel="sample" />
-            <SidebarChannle id="1" channel="sample" /> */}
           </div>
 
+          {/* User profile and settings */}
           <div className="sidebarSettings">
             <div className="sidebarAccount">
               <img
-                src={user?.photo}
-                alt="account"
+                src={authenticatedUser?.profileImageUrl}
+                alt="User Avatar"
                 onClick={() => auth.signOut()}
               />
               <div className="accountName">
-                <h4>{user?.displayName}</h4>
-                <span>#{user?.uid.substring(0, 4)}</span>
+                <h4>{authenticatedUser?.displayName}</h4>
+                <span>#{authenticatedUser?.userId.substring(0, 4)}</span>
               </div>
             </div>
 
@@ -101,4 +121,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default SidebarNavigation;

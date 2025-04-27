@@ -1,3 +1,7 @@
+/**
+ * Application Root Component
+ * Manages authentication state and renders appropriate UI components
+ */
 import React, { useEffect } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import "./App.scss";
@@ -10,46 +14,55 @@ import { login, logout } from "./features/userSlice";
 import { auth } from "./firebase";
 import { Suspense } from "react";
 
+/**
+ * Main Application Component
+ * Controls the application flow based on authentication state
+ */
 function App() {
-  const user = useAppSelector((state) => state.user.user);
-  // console.log(user);
+  // Select the authenticated user from Redux store
+  const authenticatedUser = useAppSelector((state) => state.user.currentUser);
   const dispatch = useAppDispatch();
 
+  /**
+   * Authentication state listener
+   * Monitors user authentication changes and updates Redux store
+   */
   useEffect(() => {
-    auth.onAuthStateChanged((authUser) => {
-      console.log(authUser);
-      if (authUser) {
+    // Subscribe to Firebase auth state changes
+    const unsubscribe = auth.onAuthStateChanged((authUserData) => {
+      if (authUserData) {
+        // User is signed in - update Redux with user data
         dispatch(
           login({
-            uid: authUser.uid,
-            photo: authUser.photoURL,
-            email: authUser.email,
-            displayName: authUser.displayName,
+            userId: authUserData.uid,
+            profileImageUrl: authUserData.photoURL,
+            emailAddress: authUserData.email,
+            displayName: authUserData.displayName,
           })
         );
       } else {
+        // User is signed out - clear user data in Redux
         dispatch(logout());
       }
     });
+
+    // Cleanup subscription when component unmounts
+    return unsubscribe;
   }, [dispatch]);
 
   return (
     <div className="App">
-      {user ? (
+      {authenticatedUser ? (
+        // Authenticated user view
         <>
-          {/* sidebar */}
           <ErrorBoundary FallbackComponent={ErrorFallback}>
-            {/* <Suspense fallback={<div>...Loading</div>}> */}
             <Sidebar />
-            {/* </Suspense> */}
           </ErrorBoundary>
-          {/* home */}
           <Chat />
         </>
       ) : (
-        <>
-          <Login />
-        </>
+        // Unauthenticated user view
+        <Login />
       )}
     </div>
   );

@@ -1,20 +1,26 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "../features/userSlice";
-import appReducer from "../features/appSlice";
+import channelReducer from "../features/appSlice";
 import {
   useSelector as rawUseSelector,
   TypedUseSelectorHook,
 } from "react-redux";
 
+/**
+ * Redux store configuration
+ * Centralizes application state with combined reducers
+ */
 export const store = configureStore({
   reducer: {
     user: userReducer,
-    app: appReducer,
+    channel: channelReducer,
   },
 });
 
-/* https://zenn.dev/engstt/articles/293e7420c93a18 */
+/**
+ * Type definitions for Redux interactions
+ * Enables proper type safety when dispatching actions and selecting state
+ */
 export type AppDispatch = typeof store.dispatch;
-//storeの現在の状態の型を取得
-export type RootState = ReturnType<typeof store.getState>; //getState...現在のstateを取得できる
+export type RootState = ReturnType<typeof store.getState>;
 export const useSelector: TypedUseSelectorHook<RootState> = rawUseSelector;
